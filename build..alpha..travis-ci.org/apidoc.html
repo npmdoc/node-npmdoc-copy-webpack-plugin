@@ -1,0 +1,471 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="https://github.com/kevlened/copy-webpack-plugin"
+
+    >copy-webpack-plugin (v4.0.1)</a>
+</h1>
+<h4>Copy files and directories in webpack</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.copy-webpack-plugin">module copy-webpack-plugin</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.copy-webpack-plugin.copy-webpack-plugin">
+            function <span class="apidocSignatureSpan"></span>copy-webpack-plugin
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.copy-webpack-plugin.default">
+            function <span class="apidocSignatureSpan">copy-webpack-plugin.</span>default
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.copy-webpack-plugin.default">module copy-webpack-plugin.default</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.copy-webpack-plugin.default.default">
+            function <span class="apidocSignatureSpan">copy-webpack-plugin.</span>default
+            <span class="apidocSignatureSpan">()</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.copy-webpack-plugin" id="apidoc.module.copy-webpack-plugin">module copy-webpack-plugin</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.copy-webpack-plugin.copy-webpack-plugin" id="apidoc.element.copy-webpack-plugin.copy-webpack-plugin">
+        function <span class="apidocSignatureSpan"></span>copy-webpack-plugin
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function CopyWebpackPlugin() {
+    var patterns = arguments.length &#x3c;= 0 || arguments[0] === undefined ? [] : arguments[0];
+    var options = arguments.length &#x3c;= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+    if (!Array.isArray(patterns)) {
+        throw new Error(&#x27;[copy-webpack-plugin] patterns must be an array&#x27;);
+    }
+
+    // Defaults debug level to &#x27;warning&#x27;
+    options.debug = options.debug || &#x27;warning&#x27;;
+
+    // Defaults debugging to info if only true is specified
+    if (options.debug === true) {
+        options.debug = &#x27;info&#x27;;
+    }
+
+    var debugLevels = [&#x27;warning&#x27;, &#x27;info&#x27;, &#x27;debug&#x27;];
+    var debugLevelIndex = debugLevels.indexOf(options.debug);
+    function log(msg, level) {
+        if (level === 0) {
+            msg = &#x27;WARNING - &#x27; + msg;
+        } else {
+            level = level || 1;
+        }
+        if (level &#x3c;= debugLevelIndex) {
+            console.log(&#x27;[copy-webpack-plugin] &#x27; + msg); // eslint-disable-line no-console
+        }
+    }
+
+    function warning(msg) {
+        log(msg, 0);
+    }
+
+    function info(msg) {
+        log(msg, 1);
+    }
+
+    function debug(msg) {
+        log(msg, 2);
+    }
+
+    var apply = function apply(compiler) {
+        var fileDependencies = [];
+        var contextDependencies = [];
+        var written = {};
+
+        compiler.plugin(&#x27;emit&#x27;, function (compilation, cb) {
+            debug(&#x27;starting emit&#x27;);
+            var callback = function callback() {
+                debug(&#x27;finishing emit&#x27;);
+                cb();
+            };
+
+            var globalRef = {
+                info: info,
+                debug: debug,
+                warning: warning,
+                compilation: compilation,
+                written: written,
+                fileDependencies: fileDependencies,
+                contextDependencies: contextDependencies,
+                context: compiler.options.context,
+                output: compiler.options.output.path,
+                ignore: options.ignore || [],
+                copyUnmodified: options.copyUnmodified,
+                concurrency: options.concurrency
+            };
+
+            if (globalRef.output === &#x27;/&#x27; &#x26;&#x26; compiler.options.devServer &#x26;&#x26; compiler.options.devServer.outputPath) {
+                globalRef.output = compiler.options.devServer.outputPath;
+            }
+
+            _bluebird2.default.each(patterns, function (pattern) {
+                // Identify absolute source of each pattern and destination type
+                return (0, _preProcessPattern2.default)(globalRef, pattern).then(function (pattern) {
+                    // Every source (from) is assumed to exist here
+                    return (0, _processPattern2.default)(globalRef, pattern);
+                });
+            }).catch(function (err) {
+                compilation.errors.push(err);
+            }).finally(callback);
+        });
+
+        compiler.plugin(&#x27;after-emit&#x27;, function (compilation, cb) {
+            debug(&#x27;starting after-emit&#x27;);
+            var callback = function callback() {
+                debug(&#x27;finishing after-emit&#x27;);
+                cb();
+            };
+
+            // Add file dependencies if they&#x27;re not already tracked
+            _lodash2.default.forEach(fileDependencies, function (file) {
+                if (_lodash2.default.includes(compilation.fileDependencies, file)) {
+                    debug(&#x27;not adding &#x27; + file + &#x27; to change tracking, because it\&#x27;s already tracked&#x27;);
+                } else {
+                    debug(&#x27;adding &#x27; + file + &#x27; to change tracking&#x27;);
+                    compilation.fileDependencies.push(file);
+                }
+            });
+
+            // Add context dependencies if they&#x27;re not already tracked
+            _lodash2.default.forEach(contextDependencies, function (context) {
+                if (_lodash2.default.includes(compilation.contextDependencies, context)) {
+                    debug(&#x27;not adding &#x27; + context + &#x27; to change tracking, because it\&#x27;s already tracked&#x27;);
+                } else {
+                    debug(&#x27;adding &#x27; + context + &#x27; to change tracking&#x27;);
+                    compilation.contextDependencies. ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.copy-webpack-plugin.default" id="apidoc.element.copy-webpack-plugin.default">
+        function <span class="apidocSignatureSpan">copy-webpack-plugin.</span>default
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function CopyWebpackPlugin() {
+    var patterns = arguments.length &#x3c;= 0 || arguments[0] === undefined ? [] : arguments[0];
+    var options = arguments.length &#x3c;= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+    if (!Array.isArray(patterns)) {
+        throw new Error(&#x27;[copy-webpack-plugin] patterns must be an array&#x27;);
+    }
+
+    // Defaults debug level to &#x27;warning&#x27;
+    options.debug = options.debug || &#x27;warning&#x27;;
+
+    // Defaults debugging to info if only true is specified
+    if (options.debug === true) {
+        options.debug = &#x27;info&#x27;;
+    }
+
+    var debugLevels = [&#x27;warning&#x27;, &#x27;info&#x27;, &#x27;debug&#x27;];
+    var debugLevelIndex = debugLevels.indexOf(options.debug);
+    function log(msg, level) {
+        if (level === 0) {
+            msg = &#x27;WARNING - &#x27; + msg;
+        } else {
+            level = level || 1;
+        }
+        if (level &#x3c;= debugLevelIndex) {
+            console.log(&#x27;[copy-webpack-plugin] &#x27; + msg); // eslint-disable-line no-console
+        }
+    }
+
+    function warning(msg) {
+        log(msg, 0);
+    }
+
+    function info(msg) {
+        log(msg, 1);
+    }
+
+    function debug(msg) {
+        log(msg, 2);
+    }
+
+    var apply = function apply(compiler) {
+        var fileDependencies = [];
+        var contextDependencies = [];
+        var written = {};
+
+        compiler.plugin(&#x27;emit&#x27;, function (compilation, cb) {
+            debug(&#x27;starting emit&#x27;);
+            var callback = function callback() {
+                debug(&#x27;finishing emit&#x27;);
+                cb();
+            };
+
+            var globalRef = {
+                info: info,
+                debug: debug,
+                warning: warning,
+                compilation: compilation,
+                written: written,
+                fileDependencies: fileDependencies,
+                contextDependencies: contextDependencies,
+                context: compiler.options.context,
+                output: compiler.options.output.path,
+                ignore: options.ignore || [],
+                copyUnmodified: options.copyUnmodified,
+                concurrency: options.concurrency
+            };
+
+            if (globalRef.output === &#x27;/&#x27; &#x26;&#x26; compiler.options.devServer &#x26;&#x26; compiler.options.devServer.outputPath) {
+                globalRef.output = compiler.options.devServer.outputPath;
+            }
+
+            _bluebird2.default.each(patterns, function (pattern) {
+                // Identify absolute source of each pattern and destination type
+                return (0, _preProcessPattern2.default)(globalRef, pattern).then(function (pattern) {
+                    // Every source (from) is assumed to exist here
+                    return (0, _processPattern2.default)(globalRef, pattern);
+                });
+            }).catch(function (err) {
+                compilation.errors.push(err);
+            }).finally(callback);
+        });
+
+        compiler.plugin(&#x27;after-emit&#x27;, function (compilation, cb) {
+            debug(&#x27;starting after-emit&#x27;);
+            var callback = function callback() {
+                debug(&#x27;finishing after-emit&#x27;);
+                cb();
+            };
+
+            // Add file dependencies if they&#x27;re not already tracked
+            _lodash2.default.forEach(fileDependencies, function (file) {
+                if (_lodash2.default.includes(compilation.fileDependencies, file)) {
+                    debug(&#x27;not adding &#x27; + file + &#x27; to change tracking, because it\&#x27;s already tracked&#x27;);
+                } else {
+                    debug(&#x27;adding &#x27; + file + &#x27; to change tracking&#x27;);
+                    compilation.fileDependencies.push(file);
+                }
+            });
+
+            // Add context dependencies if they&#x27;re not already tracked
+            _lodash2.default.forEach(contextDependencies, function (context) {
+                if (_lodash2.default.includes(compilation.contextDependencies, context)) {
+                    debug(&#x27;not adding &#x27; + context + &#x27; to change tracking, because it\&#x27;s already tracked&#x27;);
+                } else {
+                    debug(&#x27;adding &#x27; + context + &#x27; to change tracking&#x27;);
+                    compilation.contextDependencies. ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.copy-webpack-plugin.default" id="apidoc.module.copy-webpack-plugin.default">module copy-webpack-plugin.default</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.copy-webpack-plugin.default.default" id="apidoc.element.copy-webpack-plugin.default.default">
+        function <span class="apidocSignatureSpan">copy-webpack-plugin.</span>default
+        <span class="apidocSignatureSpan">()</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function CopyWebpackPlugin() {
+    var patterns = arguments.length &#x3c;= 0 || arguments[0] === undefined ? [] : arguments[0];
+    var options = arguments.length &#x3c;= 1 || arguments[1] === undefined ? {} : arguments[1];
+
+    if (!Array.isArray(patterns)) {
+        throw new Error(&#x27;[copy-webpack-plugin] patterns must be an array&#x27;);
+    }
+
+    // Defaults debug level to &#x27;warning&#x27;
+    options.debug = options.debug || &#x27;warning&#x27;;
+
+    // Defaults debugging to info if only true is specified
+    if (options.debug === true) {
+        options.debug = &#x27;info&#x27;;
+    }
+
+    var debugLevels = [&#x27;warning&#x27;, &#x27;info&#x27;, &#x27;debug&#x27;];
+    var debugLevelIndex = debugLevels.indexOf(options.debug);
+    function log(msg, level) {
+        if (level === 0) {
+            msg = &#x27;WARNING - &#x27; + msg;
+        } else {
+            level = level || 1;
+        }
+        if (level &#x3c;= debugLevelIndex) {
+            console.log(&#x27;[copy-webpack-plugin] &#x27; + msg); // eslint-disable-line no-console
+        }
+    }
+
+    function warning(msg) {
+        log(msg, 0);
+    }
+
+    function info(msg) {
+        log(msg, 1);
+    }
+
+    function debug(msg) {
+        log(msg, 2);
+    }
+
+    var apply = function apply(compiler) {
+        var fileDependencies = [];
+        var contextDependencies = [];
+        var written = {};
+
+        compiler.plugin(&#x27;emit&#x27;, function (compilation, cb) {
+            debug(&#x27;starting emit&#x27;);
+            var callback = function callback() {
+                debug(&#x27;finishing emit&#x27;);
+                cb();
+            };
+
+            var globalRef = {
+                info: info,
+                debug: debug,
+                warning: warning,
+                compilation: compilation,
+                written: written,
+                fileDependencies: fileDependencies,
+                contextDependencies: contextDependencies,
+                context: compiler.options.context,
+                output: compiler.options.output.path,
+                ignore: options.ignore || [],
+                copyUnmodified: options.copyUnmodified,
+                concurrency: options.concurrency
+            };
+
+            if (globalRef.output === &#x27;/&#x27; &#x26;&#x26; compiler.options.devServer &#x26;&#x26; compiler.options.devServer.outputPath) {
+                globalRef.output = compiler.options.devServer.outputPath;
+            }
+
+            _bluebird2.default.each(patterns, function (pattern) {
+                // Identify absolute source of each pattern and destination type
+                return (0, _preProcessPattern2.default)(globalRef, pattern).then(function (pattern) {
+                    // Every source (from) is assumed to exist here
+                    return (0, _processPattern2.default)(globalRef, pattern);
+                });
+            }).catch(function (err) {
+                compilation.errors.push(err);
+            }).finally(callback);
+        });
+
+        compiler.plugin(&#x27;after-emit&#x27;, function (compilation, cb) {
+            debug(&#x27;starting after-emit&#x27;);
+            var callback = function callback() {
+                debug(&#x27;finishing after-emit&#x27;);
+                cb();
+            };
+
+            // Add file dependencies if they&#x27;re not already tracked
+            _lodash2.default.forEach(fileDependencies, function (file) {
+                if (_lodash2.default.includes(compilation.fileDependencies, file)) {
+                    debug(&#x27;not adding &#x27; + file + &#x27; to change tracking, because it\&#x27;s already tracked&#x27;);
+                } else {
+                    debug(&#x27;adding &#x27; + file + &#x27; to change tracking&#x27;);
+                    compilation.fileDependencies.push(file);
+                }
+            });
+
+            // Add context dependencies if they&#x27;re not already tracked
+            _lodash2.default.forEach(contextDependencies, function (context) {
+                if (_lodash2.default.includes(compilation.contextDependencies, context)) {
+                    debug(&#x27;not adding &#x27; + context + &#x27; to change tracking, because it\&#x27;s already tracked&#x27;);
+                } else {
+                    debug(&#x27;adding &#x27; + context + &#x27; to change tracking&#x27;);
+                    compilation.contextDependencies. ...</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
